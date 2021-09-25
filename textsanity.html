@@ -1,0 +1,122 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Textsanity: Sanitize your text!</title>
+    <style type="text/css">
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        line-height: 1.5em;
+        background-color: aliceblue;
+        color: midnightblue;
+      }
+      h1 { margin-top: 1em; }
+      textarea { font-family: monospace; }
+      button { font-size: 1em; }
+      ul {
+        text-align: left;
+        display: table;
+        margin: 0 auto;
+      }
+    </style>
+    <script>
+      function transliterate(s, table) {
+        //Expects keys in the table to be single character strings.
+        //Note that "character" here means "UTF-16 code point".
+        //So, it wouldn't work if surrogate pairs were involved.
+
+        //Convert the string to an array.
+        //Because I want to use Array's map method.
+        //And using it generically or adding it to String was...ugly.
+        const a = [...s];
+
+        //Convert the table object into a Map.
+        //Just because I like the has/get interface.
+        const map = new Map(Object.entries(table));
+
+        //Use Array's map method to do the transliteration.
+        //Then use Array's join method to convert back to a String.
+        return a.map(c => {
+          if (map.has(c)) {
+            return map.get(c);
+          }
+          return c;
+        }).join('');
+      }
+
+      function sanitize() {
+        let feedback = document.querySelector("#feedback");
+        let textArea = document.querySelector("#textarea");
+
+        /*
+        textArea.select();
+        //The browsers (rightfully) don't like automatic pasting.
+        document.execCommand("paste");
+        */
+
+        //Grab the text from the textarea.
+        let theText = textArea.value;
+        let original = theText;
+        if ('' == theText) {
+          feedback.innerHTML = 'Paste your text into that field up there!';
+          return;
+        }
+
+        //Transliterate some individual characters.
+        theText = transliterate(theText, {
+          '\u2014': '--',
+          '\u2013': '-',
+          '\u201c': '"',
+          '\u201d': '"',
+          '\u2018': "'",
+          '\u2019': "'"
+        });
+
+        //Use normalization to strip diacriticals.
+        theText = theText.normalize("NFD").replace(/\p{Diacritic}/gu, "")
+
+        //Copy theText back into the textarea, select it, & copy to clipboard.
+        textArea.value = theText;
+        textArea.select();
+        document.execCommand("copy");
+
+        //Tell the user what we did.
+        if (theText == original) {
+          feedback.innerHTML = 'Text copied to the clipboard!<br />(It was already sane)';
+        } else {
+          feedback.innerHTML = 'Text sanitized &amp; copied to the clipboard!';
+        }
+      }
+
+      function clearFeedback() {
+        let feedback = document.querySelector("#feedback");
+        feedback.innerHTML = '';
+      }
+
+      function toggleDetails() {
+        let details = document.querySelector("#details");
+        details.hidden = !details.hidden;
+      }
+    </script>
+  </head>
+  <body onload="toggleDetails()">
+    <h1>Textsanity!</h1>
+    <p>
+      <textarea id="textarea" rows="10" cols="80" placeholder="Paste your text here" oninput="clearFeedback()"></textarea>
+    </p>
+    <p>
+      <button id="sanitize" onclick="sanitize()">Sanitize &amp; copy!</button>
+    </p>
+    <p id="feedback"></p>
+    <p onclick="toggleDetails()"><small>Click for details</small></p>
+    <div id="details">
+      <ul>
+        <li>M-dash (&mdash;) &rarr; two dashes (--)</li>
+        <li>N-dash (&ndash;) &rarr; dash (-)</li>
+        <li>Left &amp; right double-quote (&ldquo; &amp; &rdquo;) &rarr; double-quote (")</li>
+        <li>Left &amp; right single-quote (&lsquo; &amp; &rsquo;) &rarr; single-quote (')</li>
+        <li>Attempts to remove diacriticals, e.g. &aacute; &rarr; a</li>
+      </ul>
+    </div>
+  </body>
+</html>
