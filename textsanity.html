@@ -18,6 +18,9 @@
         display: table;
         margin: 0 auto;
       }
+      .small {
+        font-size: small;
+      }
     </style>
     <script>
       function transliterate(s, table) {
@@ -108,7 +111,7 @@
       <button id="sanitize" onclick="sanitize()">Sanitize &amp; copy!</button>
     </p>
     <p id="feedback"></p>
-    <p onclick="toggleDetails()"><small>Click for details</small></p>
+    <p onclick="toggleDetails()" class="small">Click for details</p>
     <div id="details">
       <ul>
         <li>M-dash (&mdash;) &rarr; two dashes (--)</li>
@@ -117,9 +120,9 @@
         <li>Left &amp; right single-quote (&lsquo; &amp; &rsquo;) &rarr; single-quote (')</li>
         <li>Attempts to remove diacriticals, e.g. &aacute; &rarr; a</li>
       </ul>
-      <small>
+      <p class="small">
         <a href="https://github.com/fisherro/textsanity">Github repo</a>
-      </small>
+      </p>
     </div>
   </body>
 </html>
